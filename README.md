@@ -9,6 +9,107 @@ Nowaday tons of apps are coded with [spf13/Viper](https://github.com/spf13/viper
 but there is no helper can parse out [Logrus](https://github.com/sirupsen/logrus) from source and set up it.
 
 ## Howto use it
+Configuration file example:
+TOML format
+```toml
+othersetting1 = "abc"
+othersetting2 = "def"
+
+[logger]
+level = "debug"
+[logger.out]
+name = "file"
+[logger.out.options]
+filename = "/tmp/test.log"
+[logger.formatter]
+name = "text"
+
+[[logger.hooks]]
+    name = "slackrus"
+    [logger.hooks.options]
+        HookURL = "https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYYY/ZZZZZZZZZZZZZZZZZZZZZZZZZ"
+        AcceptedLevels = "debug"
+        Channel = "#logrus-viper"
+        IconEmoji = ":rotating_light:"
+        Username = "logrusviper"
+[[logger.hooks]]
+    name = "syslog"
+    [logger.hooks.options]
+        protocol = "udp"
+        target = "127.0.0.1:514"
+	level = "debug"
+	tag = "logrusviper"
+```
+YAML format
+```yaml
+---
+othersetting1: "abc"
+othersetting2: "def"
+
+logger:
+  level: debug
+  out:
+    name: file
+    options:
+      filename: '/tmp/test.log'
+  formatter:
+    name: text
+  hooks:
+  - name: slackrus
+    options:
+      HookURL: 'https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYYY/ZZZZZZZZZZZZZZZZZZZZZZZZZ'
+      AcceptedLevels: debug
+      Channel: '#logrus-viper'
+      IconEmoji: ':rotating_light:'
+      Username: logrusviper
+  - name: syslog
+    options:
+      protocol: udp
+      target: '127.0.0.1:514'
+      level: debug
+      tag: logrusviper
+```
+JSON format
+```json
+{
+    "othersetting1": "abc",
+    "othersetting2": "def",
+    "logger": {
+        "level": "debug",
+        "formatter": {
+            "name": "text"
+        },
+        "out": {
+            "name": "file",
+            "options": {
+                "filename": "/tmp/test.log"
+            }
+        },
+        "hooks": [
+        {
+            "name": "slackrus",
+            "options": {
+                "HookURL":        "https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYYY/ZZZZZZZZZZZZZZZZZZZZZZZZZ",
+                "AcceptedLevels": "debug",
+                "Channel":        "#logrus-viper",
+                "IconEmoji":      ":rotating_light:",
+                "Username":       "logrusviper"
+            }
+        },
+        {
+            "name": "syslog",
+            "options": {
+                "protocol": "udp",
+                "target":   "127.0.0.1:514",
+                "level":    "debug",
+                "tag":      "logrusviper"
+            }
+        }
+        ]
+    }
+}
+```
+Code example:
 ```go
 import (
 	"github.com/quakelee/logrusviper"
@@ -52,4 +153,3 @@ func main() {
 	}).Error("A walrus appears")
 }
 ```
-
