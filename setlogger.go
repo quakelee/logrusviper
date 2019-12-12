@@ -1,19 +1,24 @@
 package logrusviper
 
 import (
-	"github.com/johntdyer/slackrus"
-	"github.com/sirupsen/logrus"
-	syslog_hook "github.com/sirupsen/logrus/hooks/syslog"
-	"github.com/spf13/viper"
 	"log/syslog"
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/johntdyer/slackrus"
+	"github.com/sirupsen/logrus"
+	syslog_hook "github.com/sirupsen/logrus/hooks/syslog"
+	"github.com/spf13/viper"
 )
 
+// Hook defined logrus hooks configurations
 type Hook map[string]interface{}
+
+// Hooks is abbreviation of Hook array
 type Hooks []Hook
 
+// SetLogrusConfig get all defines from viper, set to logger
 func SetLogrusConfig(logger *logrus.Logger, viper *viper.Viper) {
 	if viper.IsSet("logger.level") {
 		switch strings.ToLower(viper.GetString("logger.level")) {
@@ -142,8 +147,7 @@ func SetLogrusConfig(logger *logrus.Logger, viper *viper.Viper) {
 			alstr, hookurl, channel, icon             string
 			username, levelstr, protocol, target, tag string
 		)
-		toml := make(map[string]interface{})
-		yaml := make(map[interface{}]interface{})
+		validFormat := make(map[string]interface{})
 		err := viper.UnmarshalKey("logger.hooks", &hooks)
 		if err != nil {
 			logger.Errorln("Failed to parse slackrus hooks settings:", err.Error())
@@ -151,20 +155,15 @@ func SetLogrusConfig(logger *logrus.Logger, viper *viper.Viper) {
 		for _, hook := range hooks {
 			switch strings.ToLower(hook["name"].(string)) {
 			case "slackrus":
-				if reflect.TypeOf(hook["options"]) == reflect.TypeOf(toml) {
+				if reflect.TypeOf(hook["options"]) == reflect.TypeOf(validFormat) {
 					options := hook["options"].(map[string]interface{})
-					hookurl = options["HookURL"].(string)
-					alstr = strings.ToLower(options["AcceptedLevels"].(string))
-					channel = options["Channel"].(string)
-					icon = options["IconEmoji"].(string)
-					username = options["Username"].(string)
-				} else if reflect.TypeOf(hook["options"]) == reflect.TypeOf(yaml) {
-					options := hook["options"].(map[interface{}]interface{})
-					hookurl = options["HookURL"].(string)
-					alstr = strings.ToLower(options["AcceptedLevels"].(string))
-					channel = options["Channel"].(string)
-					icon = options["IconEmoji"].(string)
-					username = options["Username"].(string)
+					hookurl = options["hookurl"].(string)
+					alstr = strings.ToLower(options["acceptedlevels"].(string))
+					channel = options["channel"].(string)
+					icon = options["iconemoji"].(string)
+					username = options["username"].(string)
+				} else {
+					logger.Panicln("Unexpected slackrus options format")
 				}
 				switch alstr {
 				case "debug":
@@ -190,18 +189,14 @@ func SetLogrusConfig(logger *logrus.Logger, viper *viper.Viper) {
 					Username:       username,
 				})
 			case "syslog":
-				if reflect.TypeOf(hook["options"]) == reflect.TypeOf(toml) {
+				if reflect.TypeOf(hook["options"]) == reflect.TypeOf(validFormat) {
 					options := hook["options"].(map[string]interface{})
 					protocol = strings.ToLower(options["protocol"].(string))
 					target = options["target"].(string)
 					levelstr = options["level"].(string)
 					tag = options["tag"].(string)
-				} else if reflect.TypeOf(hook["options"]) == reflect.TypeOf(yaml) {
-					options := hook["options"].(map[interface{}]interface{})
-					protocol = strings.ToLower(options["protocol"].(string))
-					target = options["target"].(string)
-					levelstr = options["level"].(string)
-					tag = options["tag"].(string)
+				} else {
+					logger.Panicln("Unexpected syslog options format")
 				}
 
 				switch levelstr {
